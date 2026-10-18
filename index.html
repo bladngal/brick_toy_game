@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Brick Garden Smash — Toy Brick Sandbox</title>
+    <link rel="stylesheet" href="./src/style.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <canvas id="game-canvas" aria-label="3D Toy Brick Garden Game"></canvas>
+
+    <!-- HUD Overlay -->
+    <header class="hud-top">
+      <!-- Stud Counter & True Smasher Bar -->
+      <div class="hud-card stud-card" aria-live="polite">
+        <div class="stud-icon" aria-hidden="true">
+          <span class="stud-cap"></span>
+        </div>
+        <div class="stud-info">
+          <div class="stud-score-row">
+            <span id="stud-score" class="stud-score">0</span>
+            <span class="stud-unit">STUDS</span>
+          </div>
+          <div class="builder-progress-track" title="Collect studs from smashed objects!">
+            <div id="true-builder-fill" class="builder-progress-fill"></div>
+          </div>
+          <span id="builder-rank" class="builder-rank">True Smasher (0%)</span>
+        </div>
+      </div>
+
+      <!-- Garden Status & Action Buttons -->
+      <div class="hud-right-group">
+        <div class="hud-card status-pills">
+          <span id="intact-counter" class="status-pill">0 / 0 Smashed</span>
+          <span id="loose-bricks-counter" class="status-pill secondary">0 Loose Bricks</span>
+        </div>
+
+        <div class="hud-toolbar">
+          <button id="btn-rebuild" type="button" class="brick-btn green" title="Magically snap all smashed bricks back together (Shortcut: R)">
+            <span class="btn-stud"></span>
+            <span class="btn-label">Rebuild Garden (R)</span>
+          </button>
+          <button id="btn-auto-rebuild" type="button" class="brick-btn cyan" aria-pressed="false" title="Automatically rebuild smashed objects after 12 seconds">
+            <span class="btn-stud"></span>
+            <span class="btn-label">Auto-Rebuild: OFF</span>
+          </button>
+          <button id="btn-audio" type="button" class="brick-btn yellow" aria-pressed="true" title="Toggle Web Audio brick & water sound effects (Shortcut: M)">
+            <span class="btn-stud"></span>
+            <span class="btn-label">Sound: ON</span>
+          </button>
+          <button id="btn-help" type="button" class="brick-btn neutral" title="How to play & controls (Shortcut: H)">
+            <span class="btn-stud"></span>
+            <span class="btn-label">Controls (H)</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Center Action Toast -->
+    <div id="action-toast" class="action-toast" role="status" aria-live="polite"></div>
+
+    <!-- Bottom Controls & Action Bar -->
+    <footer class="hud-bottom">
+      <div class="controls-bar hud-card">
+        <div class="control-chip">
+          <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>Arrows</kbd>
+          <span>Run &amp; Scatter Bricks</span>
+        </div>
+        <div class="control-chip">
+          <kbd>Click</kbd> / <kbd>F</kbd> / <kbd>E</kbd>
+          <span>Spin Kick &amp; Smash</span>
+        </div>
+        <div class="control-chip">
+          <kbd>Space</kbd> (x2)
+          <span>Jump / Ground-Pound Stomp</span>
+        </div>
+        <div class="control-chip">
+          <kbd>R</kbd>
+          <span>Rebuild Bricks</span>
+        </div>
+        <div class="control-chip">
+          <kbd>Drag</kbd> / <kbd>Scroll</kbd>
+          <span>Orbit &amp; Zoom Camera</span>
+        </div>
+      </div>
+
+      <div class="mobile-actions">
+        <button id="btn-jump" type="button" class="brick-btn blue large">
+          <span class="btn-stud"></span>
+          <span class="btn-label">Jump / Stomp (Space)</span>
+        </button>
+        <button id="btn-kick" type="button" class="brick-btn red large">
+          <span class="btn-stud"></span>
+          <span class="btn-label">Kick / Smash! (F)</span>
+        </button>
+      </div>
+    </footer>
+
+    <!-- Light-Dismiss Controls & Guide Modal -->
+    <dialog id="help-dialog" closedby="any" aria-labelledby="dialog-title">
+      <form method="dialog" class="dialog-inner">
+        <div class="dialog-header">
+          <h2 id="dialog-title">Brick Garden Smash — How to Play</h2>
+          <button type="submit" class="brick-btn red small" aria-label="Close dialog">
+            <span class="btn-label">Close (Esc)</span>
+          </button>
+        </div>
+        <p class="dialog-intro">
+          Everything in the garden—fountains, trees, park benches, flower beds, lamp posts, and archways—is constructed from individual interlocking toy bricks!
+        </p>
+        <ul class="dialog-list">
+          <li>
+            <strong>Run &amp; Explore (<kbd>WASD</kbd> or <kbd>Arrow Keys</kbd>):</strong>
+            Sprint along the paths and right through delicate giant flowers or piles of loose bricks to kick them around with plastic clatter.
+          </li>
+          <li>
+            <strong>Spin Kick (<kbd>Left Click</kbd>, <kbd>F</kbd>, <kbd>E</kbd>, or <kbd>Enter</kbd>):</strong>
+            Unleash a roundhouse brick kick that cracks or explodes nearby benches, trees, fountains, and walls into tumbling 3D bricks.
+          </li>
+          <li>
+            <strong>Jump &amp; Ground-Pound Stomp (<kbd>Space</kbd>):</strong>
+            Jump on top of any garden object—or press <kbd>Space</kbd> again in mid-air for a super Ground-Pound—to smash it in a single hit!
+          </li>
+          <li>
+            <strong>Collect Shiny Studs:</strong>
+            Smashed structures burst with Silver (10), Gold (100), Blue (1,000), and rare Purple (10,000) studs. Chain smashes quickly for up to a <strong>5x Combo Multiplier</strong>!
+          </li>
+          <li>
+            <strong>Magical Brick Rebuild (<kbd>R</kbd>):</strong>
+            Press <kbd>R</kbd> anytime (or enable <em>Auto-Rebuild</em>) to pull every scattered brick back through the air into its original structure.
+          </li>
+        </ul>
+        <p class="dialog-footer-hint">Click anywhere outside this box or press <kbd>Esc</kbd> to resume playing.</p>
+      </form>
+    </dialog>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
